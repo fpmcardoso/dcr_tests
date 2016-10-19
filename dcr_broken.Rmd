@@ -1,0 +1,75 @@
+---
+title: "DCR Test - not working"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: fill
+runtime: shiny
+---
+        
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(tidyverse)
+library(shiny)
+library(dcr)
+
+## Server.R from the iris example
+iris_df <- iris
+colnames(iris_df) <- sapply(colnames(iris_df),
+                            function(c_name) {
+                                    gsub("\\.", "_", c_name)
+                            })
+iris_df <- iris_df %>%
+        mutate(Petal_Width_Factor = factor(Petal_Width, levels = seq(min(.$Petal_Width),
+                                                                     max(.$Petal_Width),0.1)))
+
+
+output$iris_charts <- renderChart({
+        dcr_obj <- dcr({iris_df})
+        
+        species_chart <- dcrchart(type = "pieChart",
+                                  id = "species_chart",
+                                  dimension = "Species",
+                                  reduce = reduceCount(),
+                                  width = "30%", height = "45%")
+        
+        petal_width_chart <- dcrchart(type = "barChart",
+                                      id = "petal_width_chart",
+                                      dimension = "Petal_Width_Factor",
+                                      reduce = reduceCount(),
+                                      width = "65%", height = "45%")
+        
+        avg_sepal_length_chart <- dcrchart(type = "rowChart",
+                                           id = "avg_sepal_length_chart",
+                                           dimension = "Species",
+                                           reduceMean("Sepal_Length"),
+                                           width = "80%", height = "45%")
+        
+        dcr_obj + species_chart + petal_width_chart + avg_sepal_length_chart
+})
+```
+
+```{r}
+chartOutput("iris_charts")
+```
+
+Row
+-----------------------------------------------------------------------
+### Species Chart
+```{r}
+div(id = "species_chart")
+```
+
+Row
+-----------------------------------------------------------------------
+### Petal Width Chart
+```{r}
+div(id = "petal_width_chart")
+```
+
+Row
+-----------------------------------------------------------------------
+### Average Sepal Length Chart
+```{r}
+div(id = "avg_sepal_length_chart")
+```
